@@ -6,19 +6,24 @@
 /*   By: jborner <jborner@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 12:52:01 by jborner           #+#    #+#             */
-/*   Updated: 2023/05/29 19:21:45 by jborner          ###   ########.fr       */
+/*   Updated: 2023/06/02 16:11:48 by jborner          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-int	null_cases(ssize_t bytes_read, char *str)
+char	*file_end(int bytes_read, int *j, char *str, char *buffer)
 {
-	if (bytes_read == -1)
-		return (1);
 	if (bytes_read == 0 && str == NULL)
-		return (1);
-	return (0);
+		return (NULL);
+	if (bytes_read < 0)
+	{
+		free(str);
+		return (NULL);
+	}
+	str[*j] = '\0';
+	buffer[0] = '\0';
+	return (str);
 }
 
 char	*read_data(int fd, char *buffer, char *str, int *j)
@@ -27,36 +32,35 @@ char	*read_data(int fd, char *buffer, char *str, int *j)
 	int		i;
 
 	bytes_read = read(fd, buffer, BUFFER_SIZE);
-	if (null_cases(bytes_read, str))
-		return (NULL);
-	while (bytes_read > 0)
+	if (bytes_read <= 0)
+		return (file_end(bytes_read, j, str, buffer));
+	i = 0;
+	while (buffer[i] != '\0')
 	{
-		i = 0;
-		while (buffer[i] != '\0')
+		str = (char *)ft_my_realloc(str, (*j + 2) * sizeof(char));
+		if (!str)
+			return (NULL);
+		str[(*j)++] = buffer[i];
+		if (buffer[i] == '\n')
 		{
-			str = (char *)ft_my_realloc(str, (*j + 2) * sizeof(char));
-			if (!str)
-				return (NULL);
-			str[(*j)++] = buffer[i];
-			if (buffer[i] == '\n')
-			{
-				str[*j] = '\0';
-				buffer = ft_memmove(buffer, buffer + i + 1, (bytes_read - i));
-				buffer[bytes_read - i - 1] = '\0';
-				return (str);
-			}
-			i++;
+			str[*j] = '\0';
+			buffer = ft_memmove(buffer, buffer + i + 1, (bytes_read - i));
+			buffer[bytes_read - i - 1] = '\0';
+			return (str);
 		}
-		bytes_read = read(fd, buffer, BUFFER_SIZE);
+		i++;
 	}
-	str[*j] = '\0';
-	return (str);
+	while (buffer[--i])
+		buffer[i] = '\0';
+	return (read_data(fd, buffer, str, j));
 }
 
 char	*str_next_line(int fd, char *buffer, char *str, int *j)
 {
 	int	i;
+	int	count_buf;
 
+	count_buf = ft_strlen(buffer);
 	i = 0;
 	while (buffer[i] != '\0')
 	{
@@ -68,12 +72,14 @@ char	*str_next_line(int fd, char *buffer, char *str, int *j)
 		if (buffer[i] == '\n')
 		{
 			str[*j] = '\0';
-			buffer = ft_memmove(buffer, &buffer[i] + 1, (BUFFER_SIZE - i - 1));
-			buffer[BUFFER_SIZE - 1] = '\0';
+			buffer = ft_memmove(buffer, &buffer[i] + 1, (count_buf - i));
+			buffer[count_buf] = '\0';
 			return (str);
 		}
 		i++;
 	}
+	while (buffer[--i])
+		buffer[i] = '\0';
 	return (read_data(fd, buffer, str, j));
 }
 
@@ -83,43 +89,10 @@ char	*get_next_line(int fd)
 	char		*str;
 	int			j;
 
-	if (fd < 0)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
 	j = 0;
 	str = NULL;
 	str = str_next_line(fd, buffer, str, &j);
 	return (str);
 }
-
-/* #include <stdio.h>
-
-int	main(void)
-{
-	int fd;
-	char *str;
-
-	fd = open("hello.txt", O_RDONLY);
-	if (fd == -1)
-	{
-		perror("Error opening file");
-		return (1);
-	}
-
-	str = get_next_line(fd);
-	printf("next line: %s\n", str);
-	free(str);
-	str = get_next_line(fd);
-	printf("next line: %s\n", str);
-	free(str);
-	str = get_next_line(fd);
-	printf("next line: %s\n", str);
-	free(str);
- 	str = get_next_line(fd);
-	printf("next line: %s\n", str);
-	free(str); 
-	str = get_next_line(fd);
-	printf("next line: %s\n", str);
-	free(str); 
-	close(fd);
-	return (0);
-}  */
