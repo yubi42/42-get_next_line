@@ -6,11 +6,21 @@
 /*   By: jborner <jborner@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/24 12:52:48 by jborner           #+#    #+#             */
-/*   Updated: 2023/05/29 18:31:17 by jborner          ###   ########.fr       */
+/*   Updated: 2023/05/31 13:49:37 by jborner          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+
+size_t	ft_strlen(const char *s)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
+}
 
 void	*ft_memmove(void *dest, const void *src, size_t n)
 {
@@ -34,30 +44,16 @@ void	*ft_memmove(void *dest, const void *src, size_t n)
 	return (dest);
 }
 
-void	*ft_memcpy(void *dest, const void *src, size_t n)
-{
-	unsigned char		*pdest;
-	const unsigned char	*psrc;
-
-	pdest = dest;
-	psrc = src;
-	if (dest == src)
-		return (dest);
-	while (n-- > 0)
-		*pdest++ = *psrc++;
-	return (dest);
-}
-
 void	*ft_my_realloc(void *str, size_t size)
 {
-	void    *new_str;
+	void	*new_str;
 
 	new_str = malloc(size);
 	if (!new_str)
 		return (NULL);
 	if (str != NULL)
 	{
-		ft_memcpy(new_str, str, size);
+		ft_memmove(new_str, str, size - 2);
 		free(str);
 	}
 	return (new_str);
